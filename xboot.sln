@@ -3,12 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.Server", "xbootfunctions\XBoot.Server.csproj", "{DBD788F1-6C27-4D93-86B4-96BC69573471}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.Server", "XBoot.Server\XBoot.Server.csproj", "{DBD788F1-6C27-4D93-86B4-96BC69573471}"
 	ProjectSection(ProjectDependencies) = postProject
 		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A} = {494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.SampleClient", "SampleClient\XBoot.SampleClient.csproj", "{D5489343-CED6-41E8-A8E1-DC08D7B929AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.SampleClient", "XBoot.SampleClient\XBoot.SampleClient.csproj", "{D5489343-CED6-41E8-A8E1-DC08D7B929AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79} = {755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}
 	EndProjectSection
