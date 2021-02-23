@@ -1,0 +1,40 @@
+title XBoot
+
+participantgroup #lightgreen **IoT Device**
+participant Operating System
+participant Application Code
+participant XBoot.Client SDK
+participant DPS SDK
+participant IoT Hub Client SDK
+end
+
+Intermediate x.509 Cert->DPS: Create enrollment group\n & install cert
+Intermediate x.509 Cert->XBoot.Server Function: Install signing certificate
+Application Code->Operating System:Read local \nconfig file
+Operating System-->Application Code:Retrieve settings
+Application Code->XBoot.Client SDK:GetDeviceCert(RegistrationId, DN)
+XBoot.Client SDK->XBoot.Client SDK:Generate RSA \nkeypair
+XBoot.Client SDK->XBoot.Client SDK:Generate CSR in \nDER-encoded PKCS#10
+XBoot.Client SDK->XBoot.Server Function:HTTPS POST: MAC + CSR (CSR in DER-encoded PKCS#10)
+XBoot.Server Function->Authorized Devices DB: Verify RegistrationId is authorized
+Authorized Devices DB-->XBoot.Server Function:
+XBoot.Server Function->XBoot.Server Function: Read signing certificate \nand private key
+XBoot.Server Function->XBoot.Server Function: Generate device\n certificate
+linear 
+XBoot.Server Function-->XBoot.Client SDK: HTTPS Response: Certificate in DER-encoded PKCS#12
+linear off
+XBoot.Client SDK->XBoot.Client SDK:Combine cert and private \nkey into pfx
+XBoot.Client SDK-->Application Code: Return pfx in DER-encoded byte[]
+Application Code->Application Code: Save as pfx to local disk
+linear
+Application Code->DPS SDK: ProvisioningDeviceClient.RegisterAsync()
+DPS SDK->DPS: 
+DPS->IoT Hub: Register deviceId
+IoT Hub-->DPS: Assigned IoT Hub
+DPS-->DPS SDK: 
+DPS SDK-->Application Code: Assigned IoT Hub
+Application Code->IoT Hub Client SDK: DeviceClient.Create(x509)
+IoT Hub Client SDK->IoT Hub: x.509 Auth
+Application Code->IoT Hub Client SDK: DeviceClient.SendEventAsync()
+IoT Hub Client SDK->IoT Hub: Send messages
+linear off
