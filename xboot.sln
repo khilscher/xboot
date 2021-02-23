@@ -3,7 +3,22 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xbootfunctions", "xbootfunctions\xbootfunctions.csproj", "{DBD788F1-6C27-4D93-86B4-96BC69573471}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.Server", "xbootfunctions\XBoot.Server.csproj", "{DBD788F1-6C27-4D93-86B4-96BC69573471}"
+	ProjectSection(ProjectDependencies) = postProject
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A} = {494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBoot.SampleClient", "SampleClient\XBoot.SampleClient.csproj", "{D5489343-CED6-41E8-A8E1-DC08D7B929AD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79} = {755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBoot.Client", "Xboot.Client\XBoot.Client.csproj", "{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}"
+	ProjectSection(ProjectDependencies) = postProject
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A} = {494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBoot.Models", "XBoot.Models\XBoot.Models.csproj", "{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +30,18 @@ Global
 		{DBD788F1-6C27-4D93-86B4-96BC69573471}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBD788F1-6C27-4D93-86B4-96BC69573471}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBD788F1-6C27-4D93-86B4-96BC69573471}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5489343-CED6-41E8-A8E1-DC08D7B929AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5489343-CED6-41E8-A8E1-DC08D7B929AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5489343-CED6-41E8-A8E1-DC08D7B929AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5489343-CED6-41E8-A8E1-DC08D7B929AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{755E6E3B-25CF-4E6B-BA0A-9C4B6B343D79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{494A3BC4-FC90-4DCF-A05E-35C5EFF8151A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
