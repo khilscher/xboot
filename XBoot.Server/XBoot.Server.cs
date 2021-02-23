@@ -8,17 +8,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using XBoot.Models;
-using Microsoft.AspNetCore.Builder;
 using Org.BouncyCastle.Asn1.Pkcs;
-//using System.Security.Cryptography.X509Certificates;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
-using Org.BouncyCastle.Utilities.IO.Pem;
 using Org.BouncyCastle.X509;
 using Org.BouncyCastle.X509.Extension;
 
@@ -26,6 +22,7 @@ namespace XBoot.Server
 {
     public static class certificate
     {
+        private static int certificateLifespanInYears = 5;
 
         [FunctionName("certificate")]
         public static async Task<IActionResult> Run(
@@ -53,8 +50,8 @@ namespace XBoot.Server
 
             }
 
-            // TODO Validate the RegistrationId with some external source
-            // Registration ID must only contain alphanumeric and hyphen to maintain compatibility with DPS.
+            // TODO Validate the RegistrationId with some external source e.g. a database
+            // RegistrationId must only contain alphanumeric and hyphen to maintain compatibility with DPS.
             // e.g. bool isAuthorized = CheckAuthorizedDevicesDB(request.RegistrationId);
             bool isAuthorized = true;
 
@@ -66,10 +63,12 @@ namespace XBoot.Server
                 CertificationRequestInfo info = null;
 
                 // Get the signing certificate
+                // TODO Store and read certificate from a secure location. E.g. KeyVault.
                 X509Certificate serverCertificate =
                     DotNetUtilities.FromX509Certificate(
                         System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromCertFile(iaCertFile));
 
+                // TODO Store and read private key from a secure location. E.g. KeyVault.
                 AsymmetricKeyParameter serverPrivateKey = readPrivateKey(iaPrivKeyFile);
 
                 byte[] csr = Convert.FromBase64String(request.Csr);
@@ -91,7 +90,7 @@ namespace XBoot.Server
                 generator.SetSerialNumber(BigInteger.ProbablePrime(120, new Random()));
                 generator.SetIssuerDN(serverCertificate.SubjectDN);
                 generator.SetNotBefore(DateTime.Now);
-                generator.SetNotAfter(DateTime.Now.AddYears(5));
+                generator.SetNotAfter(DateTime.Now.AddYears(certificateLifespanInYears));
                 generator.SetSubjectDN(info.Subject);
                 generator.SetPublicKey(publicKey);
                 generator.SetSignatureAlgorithm("SHA512withRSA");

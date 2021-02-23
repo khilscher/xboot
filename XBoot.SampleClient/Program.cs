@@ -59,11 +59,17 @@ namespace XBoot.SampleClient
 
 			}
 
-			// Provision device with DPS using pfx
+			// Provision device via DPS using pfx. 
+			// This is boiler plate DPS sample code taken from 
+			// https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-csharp
+			// to demonstrate that XBoot doesn't interfere with the DPS provisioning process.
 			RunSampleAsync().Wait();
 
 		}
-
+		/// <summary>
+		/// Provision device using DPS and send telemetry to IoT Hub.
+		/// </summary>
+		/// <returns></returns>
 		public static async Task RunSampleAsync()
 		{
 			try
@@ -75,8 +81,10 @@ namespace XBoot.SampleClient
 
 				// Use HTTP, AMQP or MQTT to communicate with DPS
 				//var transportHandler = new ProvisioningTransportHandlerHttp();
+				//var transportHandler = new ProvisioningTransportHandlerAmqp();
 				var transportHandler = new ProvisioningTransportHandlerMqtt();
 
+				// Standard DPS provisioning flow using x.509
 				ProvisioningDeviceClient provClient = ProvisioningDeviceClient.Create(
 					dpsEndpoint,
 					idScope,
@@ -97,6 +105,7 @@ namespace XBoot.SampleClient
 
 				Console.WriteLine($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
+				// Standard IoT Hub authentication and connection flow using x.509
 				Console.WriteLine("Creating X509 authentication for IoT Hub...");
 				IAuthenticationMethod auth = new DeviceAuthenticationWithX509Certificate(
 					result.DeviceId,
@@ -127,11 +136,16 @@ namespace XBoot.SampleClient
             }
 		}
 
+		/// <summary>
+		/// Stub code to generate a unique registration ID.
+		/// </summary>
+		/// <returns>GUID</returns>
 		public static string GetRegistrationId()
 		{
 
 			// Registration ID must only contain alphanumeric and hyphen to maintain compatibility with DPS.
-			// Registration Id could be the device's MAC address, etc.
+			// In reality, the Registration Id could be the device's MAC address, etc. 
+			// Something that uniquely identifies the device.
 			return Guid.NewGuid().ToString();
 
 		}

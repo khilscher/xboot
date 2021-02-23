@@ -1,7 +1,9 @@
 # XBoot
-X.509 Bootstrap (aka XBoot) allows IoT device builders to have a generic firmware loaded onto their devices at time of manufacturing and avoid the cost of installing individual x.509 certificates onto each device.
+The [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) provisioning process assumes an x.509 certificate is already installed on the device. This is where **X.509 Bootstrap** (aka **XBoot**) comes in.
 
-When the IoT device first boots, the device generates an x.509 certificate signing request (CSR), sends the CSR to the XBoot server REST endpoint, and gets a signed certificate back, which can be used to authenticate with [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) and [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub).
+When the IoT device first boots, the IoT device generates an x.509 certificate signing request (CSR) using the (optional) **XBoot.Client** SDK, sends the CSR to the **XBoot.Server** REST endpoint, and receives a signed x.509 certificate back. This certificate can then be used in the [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) provisioning process and to authenticate with [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub).
+
+XBoot allows IoT device builders to have a generic firmware loaded onto their devices at time of manufacturing and avoid the cost of installing individual x.509 certificates onto each device, post-manufacturing.
 
 XBoot consists of the following components:
 
@@ -18,6 +20,11 @@ XBoot consists of the following components:
 
 ![Sequence Diagram](./XBoot.png)
 
+## Setup
+
+1. Generate the root and intermediate certificates by following the **Generating Certificates for XBoot.Server** instructions below.
+// TODO
+
 ## Generating Certificates for XBoot.Server
 
 The following steps can be used to generate a root certificate and an intermediate certificate. The intermediate certificate can be used by the XBoot.Server.
@@ -28,7 +35,7 @@ Generate private and public key pair for root CA; output is a pem file (pkcs8 fo
 openssl genrsa -out ca.key 2048
 ```
 
-Generate self signed root certificate (no need for a CSR...no one to sign it). When prompted, fill in certificate details.
+Generate self signed root certificate. When prompted, fill in certificate details.
 ```
 openssl req -new -x509 -days 1826 -key ca.key -out ca.cer
 ```
@@ -63,3 +70,8 @@ Package in PKCS 12
 ```
 openssl pkcs12 -export -out ia.p12 -inkey ia.key -in ia.cer -chain -CAfile ca.cer
 ```
+
+## Backlog
+
+1. Create an overload for GetDeviceCertificate() that doesn't require use of X500DistinguishedName.
+1. Integrate XBoot.Server with Azure KeyVault. See [https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/](https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/)
