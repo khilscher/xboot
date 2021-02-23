@@ -7,12 +7,12 @@ XBoot allows IoT device builders to have a generic firmware loaded onto their de
 
 XBoot consists of the following components:
 
-- **XBoot.Client** is a .NET Core SDK (packaged as a nuget) that allows IoT devices to generate and send a x.509 CSR to the XBoot.Server and receive back a pfx containing a signed certificate and private key.
+- **XBoot.Client** is a .NET Core 3.1 SDK (packaged as a nuget) that allows IoT devices to generate and send a x.509 CSR to the XBoot.Server and receive back a pfx containing a signed certificate and private key.
   - Note, the private key never leaves the IoT device.
-- **XBoot.Server** is a .NET Core Azure Function which acts as a PKI server. It exposes a REST endpoint that accepts Certificate Signing Requests from IoT Devices running the XBoot.Client SDK, signs them using your ceritificate, and sends back the signed x.509 certificate to the XBoot.Client. Optionally, you can modify the XBoot.Server code to:
+- **XBoot.Server** is a .NET Core 3.1 Azure Function which acts as a PKI server. It exposes a REST endpoint that accepts Certificate Signing Requests from IoT Devices running the XBoot.Client SDK, signs them using your ceritificate, and sends back the signed x.509 certificate to the XBoot.Client. Optionally, you can modify the XBoot.Server code to:
   - Call into your own, or your partner, PKI APIs rather than acting as a PKI server.
   - Validate the device RegistrationID with a backend database or API.
-- **XBoot.SampleClient** is a .NET Core console application that shows an E2E example of an IoT device sending a CSR, receiving a certificate back, and using that certificate to register with DPS and finally to authenticate with IoT Hub.
+- **XBoot.SampleClient** is a .NET Core 3.1 console application that shows an E2E example of an IoT device sending a CSR, receiving a certificate back, and using that certificate to register with DPS and finally to authenticate with IoT Hub.
 
 ## Sequence Diagram
 
@@ -23,7 +23,19 @@ XBoot consists of the following components:
 ## Setup
 
 1. Generate the root and intermediate certificates by following the **Generating Certificates for XBoot.Server** instructions below.
-// TODO
+1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test.
+1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the ```XBoot.SampleClient Program.cs``` file.
+
+1. Create an **Azure IoT Hub**.
+1. Create an **Azure DPS** instance. Copy the **ID Scope** into ```idScope``` in the ```XBoot.SampleClient Program.cs``` file.
+1. Link the DPS instance to your IoT Hub.
+1. Upload and verify your root or intermediate certificate to DPS.
+1. In DPS, create an **Enrollment Group**.
+   - Set the **Attestation Type** to **Certificate**.
+   - Set the **Certificate Type** to **CA Certificate** or **Intermediate Certificate**.
+   - Configure the remaining Enrollment Group settings as needed.
+1. Edit the CSR details on lines 30-36 of the ```XBoot.SampleClient Program.cs``` file.
+1. Build and run the **XBoot.SampleClient**.
 
 ## Generating Certificates for XBoot.Server
 
@@ -70,6 +82,7 @@ Package in PKCS 12
 ```
 openssl pkcs12 -export -out ia.p12 -inkey ia.key -in ia.cer -chain -CAfile ca.cer
 ```
+
 
 ## Backlog
 
