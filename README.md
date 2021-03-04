@@ -22,10 +22,11 @@ XBoot consists of the following components:
 
 ## Setup
 
-1. Generate the root and intermediate certificates by following the **Generating Certificates for XBoot.Server** instructions below.
-1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test.
+1. Generate your root and intermediate certificate by following the **Generating Certificates for XBoot.Server** instructions below. The intermediate certificate will be the **signing** certificate.
+1. Update your local.setting.json following the  **App Settings** instructions below.
+1. Save your intermediate certificate and private key in the location you specified in the previous step.
+1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test. When deploying to Azure, ensure the settings you configured in the ```local.settings.json``` are in your Function App **Application Settings**.
 1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the ```XBoot.SampleClient Program.cs``` file.
-
 1. Create an **Azure IoT Hub**.
 1. Create an **Azure DPS** instance. Copy the **ID Scope** into ```idScope``` in the ```XBoot.SampleClient Program.cs``` file.
 1. Link the DPS instance to your IoT Hub.
@@ -36,6 +37,45 @@ XBoot consists of the following components:
    - Configure the remaining Enrollment Group settings as needed.
 1. Edit the CSR details on lines 30-36 of the ```XBoot.SampleClient Program.cs``` file.
 1. Build and run the **XBoot.SampleClient**.
+
+## App Settings
+
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. **Note** Azure Key Vault support not yet implemented.
+
+### When the signing certificate and private key are stored in files
+
+```
+{
+  ...,
+  "Location": 1,
+  "PrivateKeyFile": "c:\\openssl_stuff\\ia.key",
+  "CertificateFile": "c:\\openssl_stuff\\ia.cer"
+}
+```
+
+### When the signing certificate and private key are stored in Azure Blob Storage
+
+```
+{
+  ...,
+  "Location": 2,
+  "BlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=<blobaccountname>;AccountKey=...",
+  "BlobContainerName": "xboot",
+  "PrivateKeyFile": "ia.key",
+  "CertificateFile": "ia.cer"
+}
+```
+
+### When the signing certificate and private key are stored directly in the App Settings
+
+```
+{
+  ...,
+  "Location": 3,
+  "PrivateKeyFile": "-----BEGIN RSA PRIVATE KEY-----blahblahblah-----END RSA PRIVATE KEY-----",
+  "CertificateFile": "-----BEGIN CERTIFICATE-----blahblahblah-----END CERTIFICATE-----"
+}
+```
 
 ## Generating Certificates for XBoot.Server
 
@@ -87,4 +127,4 @@ openssl pkcs12 -export -out ia.p12 -inkey ia.key -in ia.cer -chain -CAfile ca.ce
 ## Backlog
 
 1. Create an overload for GetDeviceCertificate() that doesn't require use of X500DistinguishedName.
-1. Integrate XBoot.Server with Azure KeyVault. See [https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/](https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/)
+1. Integrate XBoot.Server with Azure Key Vault. See [https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/](https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/)

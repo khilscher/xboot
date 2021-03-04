@@ -16,12 +16,13 @@ namespace XBoot.SampleClient
     {
 
 		private static string dpsEndpoint = "global.azure-devices-provisioning.net";
-		private static string idScope = "0ne000524BE";
-		private static string xbootUri = "http://localhost:7071/api/certificate";
+		private static string idScope = "0ne011223344"; //Replace with your DPS idScope
+		private static string xbootUri = "https://yourfunction.azurewebsites.net/api/certificate?code=yourkey"; // Replace with your function app url
 		private static int MESSAGE_COUNT = 10;
 		private static int DELAY_BETWEEN_SENDS = 2000;
 		private static string pfxFile;
 		private static X509Certificate2 certificate;
+		private static DeviceClient iotClient;
 
 		static void Main(string[] args)
         {
@@ -42,28 +43,55 @@ namespace XBoot.SampleClient
 			// Create XBoot client
 			XBootClient xb = new XBootClient(xbootUri);
 
-			// Generate key pair, CSR and submit CSR to XBoot.Server.
-			// Returns as DER-encoded byte array
-			Console.WriteLine("Sending CSR to XBoot server...");
-			byte[] pfx = xb.GetDeviceCertificate(CN, name);
-
-			certificate = new X509Certificate2(pfx);
-
-			if(certificate != null)
+			try
 			{
-				Console.WriteLine("Received pfx from server.");
+				// Generate key pair, CSR and submit CSR to XBoot.Server.
+				// Returns as DER-encoded byte array
+				Console.WriteLine("Sending CSR to XBoot server...");
+				byte[] pfx = xb.GetDeviceCertificate(CN, name);
 
-				// Save pfx to disk. Contains cert and private key.
-				File.WriteAllBytes(pfxFile, pfx);
-				Console.WriteLine($"Saved pfx file to: {pfxFile}");
+				if (pfx != null)
+				{
 
+					Console.WriteLine("Received pfx from server.");
+
+					certificate = new X509Certificate2(pfx);
+
+					if (certificate != null)
+					{
+
+						// Save pfx to disk. Contains cert and private key.
+						File.WriteAllBytes(pfxFile, pfx);
+						Console.WriteLine($"Saved pfx file to: {pfxFile}");
+
+						// Provision device via DPS using pfx. 
+						// This is boiler plate DPS sample code taken from 
+						// https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-csharp
+						// to demonstrate that XBoot doesn't interfere with the DPS provisioning process.
+						RunSampleAsync().Wait();
+
+					}
+                    else
+                    {
+
+						Console.WriteLine("Unable to convert pfx to X509Certificate2.");
+
+					}
+
+				}
+                else
+                {
+
+					Console.WriteLine("No response from XBoot.Server.");
+
+                }
 			}
+			catch(Exception ex)
+            {
 
-			// Provision device via DPS using pfx. 
-			// This is boiler plate DPS sample code taken from 
-			// https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-csharp
-			// to demonstrate that XBoot doesn't interfere with the DPS provisioning process.
-			RunSampleAsync().Wait();
+				Console.WriteLine(ex.Message);
+
+            }
 
 		}
 		/// <summary>
@@ -112,11 +140,11 @@ namespace XBoot.SampleClient
 					certificate);
 
 				Console.WriteLine($"Connecting to IoT Hub...");
-				using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, TransportType.Mqtt);
+				iotClient = DeviceClient.Create(result.AssignedHub, auth, TransportType.Mqtt);
 
 				Console.WriteLine("Sending telemetry messages...");
-				using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
-
+				var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
+                
 				for (int count = 0; count < MESSAGE_COUNT; count++)
 				{
 					await iotClient.SendEventAsync(message);
@@ -125,6 +153,10 @@ namespace XBoot.SampleClient
 
 					await Task.Delay(DELAY_BETWEEN_SENDS);
 				}
+
+				await iotClient.CloseAsync();
+
+				iotClient.Dispose();
 
 				Console.WriteLine("Finished.");
 			}
