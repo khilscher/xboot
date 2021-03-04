@@ -1,9 +1,11 @@
 # XBoot
 The [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) provisioning process assumes an x.509 certificate is already installed on the device. This is where **X.509 Bootstrap** (aka **XBoot**) comes in.
 
-When the IoT device first boots, the IoT device generates an x.509 certificate signing request (CSR) using the (optional) **XBoot.Client** SDK, sends the CSR to the **XBoot.Server** REST endpoint, and receives a signed x.509 certificate back. This certificate can then be used in the [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) provisioning process and to authenticate with [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub).
+When the IoT device first boots, the IoT device generates an x.509 certificate signing request (CSR) using the (optional) **XBoot.Client** SDK, sends the CSR to the **XBoot.Server** REST endpoint, and receives a signed x.509 certificate back. This certificate can then be used by the device to attest to [Azure Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps) (DPS) and to authenticate with [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub).
 
-XBoot allows IoT device builders to have a generic firmware loaded onto their devices at time of manufacturing and avoid the cost of installing individual x.509 certificates onto each device, post-manufacturing.
+XBoot allows IoT device builders to have a generic firmware loaded onto their devices at time of manufacturing and avoid the cost of installing individual x.509 certificates onto each device, during or post-manufacturing.
+
+## Components
 
 XBoot consists of the following components:
 
@@ -13,6 +15,10 @@ XBoot consists of the following components:
   - Call into your own, or your partner, PKI APIs rather than acting as a PKI server.
   - Validate the device RegistrationID with a backend database or API.
 - **XBoot.SampleClient** is a .NET Core 3.1 console application that shows an E2E example of an IoT device sending a CSR, receiving a certificate back, and using that certificate to register with DPS and finally to authenticate with IoT Hub.
+
+The following shows the output from the XBoot.SampleClient:
+
+![SampleClient Output](./sampleclient.JPG)
 
 ## Sequence Diagram
 
@@ -40,7 +46,7 @@ XBoot consists of the following components:
 
 ## App Settings
 
-Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. **Note** Azure Key Vault support not yet implemented.
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. **Note** Azure Key Vault support is not yet implemented.
 
 ### When the signing certificate and private key are stored in files
 
@@ -79,7 +85,7 @@ Add the following to your ```local.settings.json``` when running the **XBoot.Ser
 
 ## Generating Certificates for XBoot.Server
 
-The following steps can be used to generate a root certificate and an intermediate certificate. The intermediate certificate can be used by the XBoot.Server.
+The following steps can be used to generate a root certificate and an intermediate certificate. The intermediate certificate can be used by the XBoot.Server as the signing certificate. The root certificate can be stored offline.
 
 ### Generate root CA
 Generate private and public key pair for root CA; output is a pem file (pkcs8 format).
