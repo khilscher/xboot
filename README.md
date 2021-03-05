@@ -10,11 +10,13 @@ XBoot allows IoT device builders to have a generic firmware loaded onto their de
 XBoot consists of the following components:
 
 - **XBoot.Client** is a .NET Core 3.1 SDK (packaged as a nuget) that allows IoT devices to generate and send a x.509 CSR to the XBoot.Server and receive back a pfx containing a signed certificate and private key.
-  - Note, the private key never leaves the IoT device.
+  - **Note:** The private key never leaves the IoT device!
 - **XBoot.Server** is a .NET Core 3.1 Azure Function which acts as a PKI server. It exposes a REST endpoint that accepts Certificate Signing Requests from IoT Devices running the XBoot.Client SDK, signs them using your ceritificate, and sends back the signed x.509 certificate to the XBoot.Client. Optionally, you can modify the XBoot.Server code to:
   - Call into your own, or your partner, PKI APIs rather than acting as a PKI server.
   - Validate the device RegistrationID with a backend database or API.
 - **XBoot.SampleClient** is a .NET Core 3.1 console application that shows an E2E example of an IoT device sending a CSR, receiving a certificate back, and using that certificate to register with DPS and finally to authenticate with IoT Hub.
+  - The sample client sends a GUID as its RegistrationID. In reality a client should send something unique to the device which can be verified against a backend database or API. For example, a MAC address, IMEI, etc.
+  - The sample client does not integrate with a HSM. If your device has an HSM, this would be highly recommended!
 
 The following shows the output from the XBoot.SampleClient:
 
@@ -32,21 +34,23 @@ The following shows the output from the XBoot.SampleClient:
 1. Update your local.setting.json following the  **App Settings** instructions below.
 1. Save your intermediate certificate and private key in the location you specified in the previous step.
 1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test. When deploying to Azure, ensure the settings you configured in the ```local.settings.json``` are in your Function App **Application Settings**.
-1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the ```XBoot.SampleClient Program.cs``` file.
+1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the **XBoot.SampleClient** ```Program.cs``` file.
 1. Create an **Azure IoT Hub**.
-1. Create an **Azure DPS** instance. Copy the **ID Scope** into ```idScope``` in the ```XBoot.SampleClient Program.cs``` file.
+1. Create an **Azure DPS** instance. Copy the **ID Scope** into ```idScope``` in the **XBoot.SampleClient** ```Program.cs``` file.
 1. Link the DPS instance to your IoT Hub.
-1. Upload and verify your root or intermediate certificate to DPS.
+1. Upload and verify your intermediate certificate to DPS.
 1. In DPS, create an **Enrollment Group**.
    - Set the **Attestation Type** to **Certificate**.
    - Set the **Certificate Type** to **CA Certificate** or **Intermediate Certificate**.
    - Configure the remaining Enrollment Group settings as needed.
-1. Edit the CSR details on lines 30-36 of the ```XBoot.SampleClient Program.cs``` file.
+1. Edit the CSR details on lines 30-36 of the **XBoot.SampleClient** ```Program.cs``` file.
 1. Build and run the **XBoot.SampleClient**.
 
 ## App Settings
 
-Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. **Note** Azure Key Vault support is not yet implemented.
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. When running the **XBoot.Server** Azure Function in Azure, ensure the settings below are in your **Application Settings**.
+
+**Note:** Azure Key Vault support is not yet implemented.
 
 ### When the signing certificate and private key are stored in files
 
