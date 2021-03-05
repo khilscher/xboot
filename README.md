@@ -136,5 +136,11 @@ openssl pkcs12 -export -out ia.p12 -inkey ia.key -in ia.cer -chain -CAfile ca.ce
 
 ## Backlog
 
-1. Create an overload for GetDeviceCertificate() that doesn't require use of X500DistinguishedName.
-1. Integrate XBoot.Server with Azure Key Vault. See [https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/](https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/)
+1. XBoot.Client:
+    1. Create an overload for GetDeviceCertificate() that doesn't require use of X500DistinguishedName.
+    1. Create an overload for GetDeviceCertificate() that allows for the device private key to be passed in. Useful when a cert is about to expire and a new CSR needs to be generated using the same private key.
+    1. Add async support
+1. XBoot.Server:
+    1. Integrate with Azure Key Vault. See [https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/](https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/get-certificate-private-key/)
+    1. Add async support
+    1. Create IsAuthorized stub method.
