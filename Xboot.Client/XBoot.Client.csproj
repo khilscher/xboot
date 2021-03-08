@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>1.0.3</Version>
+    <Version>1.0.7</Version>
     <Authors>Kevin Hilscher</Authors>
     <PackageProjectUrl>https://github.com/khilscher/xboot</PackageProjectUrl>
     <RepositoryUrl>https://github.com/khilscher/xboot</RepositoryUrl>
@@ -14,7 +14,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\XBoot.Models\XBoot.Models.csproj" />
+    <ProjectReference Include="..\XBoot.Models\XBoot.Models.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_PackageFiles Include="$(OutputPath)\XBoot.Models.dll">
+      <BuildAction>None</BuildAction>
+      <PackagePath>lib\netcoreapp3.1</PackagePath>
+    </_PackageFiles>
   </ItemGroup>
 
 </Project>
