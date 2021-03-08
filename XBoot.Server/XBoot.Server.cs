@@ -146,7 +146,7 @@ namespace XBoot.Server
         /// <returns>True if device is authorized</returns>
         private static bool CheckIfAuthorized(string registrationId)
         {
-            bool isAuthorized = false;
+            bool isAuthorized = true;
 
             // TODO You should validate the RegistrationId with some external source e.g. a database
             // e.g. isAuthorized = CheckRegistratonInCosmosDB(registrationId);
