@@ -79,12 +79,7 @@ namespace XBoot.SampleClient
 					}
 
 				}
-                else
-                {
 
-					Console.WriteLine("No response from XBoot.Server.");
-
-                }
 			}
 			catch(Exception ex)
             {
