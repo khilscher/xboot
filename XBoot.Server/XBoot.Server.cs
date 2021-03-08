@@ -63,10 +63,8 @@ namespace XBoot.Server
                     return new BadRequestResult();
                 }
 
-                // TODO Validate the RegistrationId with some external source e.g. a database
-                // RegistrationId must only contain alphanumeric and hyphen to maintain compatibility with DPS.
-                // e.g. bool isAuthorized = CheckAuthorizedDevicesDB(request.RegistrationId);
-                bool isAuthorized = true;
+                // Check if the device is authorized to request a certificate
+                bool isAuthorized = CheckIfAuthorized(request.RegistrationId);
 
                 if (isAuthorized)
                 {
@@ -126,6 +124,10 @@ namespace XBoot.Server
                     return new OkObjectResult(responseMessage);
 
                 }
+                else
+                {
+                    return new UnauthorizedResult();
+                }
 
             }
             catch(Exception ex)
@@ -137,6 +139,26 @@ namespace XBoot.Server
 
         }
 
+        /// <summary>
+        /// Checks if the device's Registration ID is authorized in some external source.
+        /// </summary>
+        /// <param name="registrationId"></param>
+        /// <returns>True if device is authorized</returns>
+        private static bool CheckIfAuthorized(string registrationId)
+        {
+            bool isAuthorized = false;
+
+            // TODO You should validate the RegistrationId with some external source e.g. a database
+            // e.g. isAuthorized = CheckRegistratonInCosmosDB(registrationId);
+
+            return isAuthorized;
+        }
+
+        /// <summary>
+        /// Read application settings from local.settings.json or from Application Settings
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>Completed Task</returns>
         private static Task ReadAppSettings(ExecutionContext context)
         {
             try
