@@ -88,12 +88,18 @@ namespace XBoot.Client
                     }
 
                 }
+                else
+                {
+
+                    throw new Exception(response.StatusCode.ToString());
+
+                }
 
             }
             catch (Exception ex)
             {
 
-                Console.WriteLine($"{ex.Message}");
+                throw new Exception(ex.Message);
 
             }
 
