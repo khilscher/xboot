@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.12.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.14.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="XBoot.Client" Version="1.0.3" />
+    <PackageReference Include="XBoot.Client" Version="1.0.7" />
   </ItemGroup>
 
 </Project>
