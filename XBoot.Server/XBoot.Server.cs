@@ -20,6 +20,9 @@ using Org.BouncyCastle.X509.Extension;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
+using Azure.Security.KeyVault.Certificates;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 
 namespace XBoot.Server
 {
@@ -29,14 +32,15 @@ namespace XBoot.Server
         private static BlobClient blobClient;
 
         // Supported locations for retrieving your cert and private key
-        // TODO Implement KeyVault
         private enum Location { KeyVault, File, Blob, Local };
 
         private static string blobConnectionString;
         private static string blobContainerName;
+        private static string keyVaultName;
         private static string key;
         private static string cert;
         private static Location location;
+        private static KeyVaultCertificateWithPolicy keyVaultCertificate;
 
         // Certificate life span in years
         private static int certificateLifespanInYears = 5;
@@ -52,7 +56,7 @@ namespace XBoot.Server
 
             try
             {
-                await ReadAppSettings(context);
+                await ReadAppSettings(context, log);
 
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 Certificate_Request request = JsonConvert.DeserializeObject<Certificate_Request>(requestBody);
@@ -69,6 +73,8 @@ namespace XBoot.Server
                 if (isAuthorized)
                 {
 
+                    log.LogInformation($"{request.RegistrationId} is authorized.");
+
                     Pkcs10CertificationRequest decodedCsr = null;
                     RsaKeyParameters publicKey = null;
                     CertificationRequestInfo info = null;
@@ -76,8 +82,18 @@ namespace XBoot.Server
                     // Get the signing certificate from a location
                     X509Certificate serverCertificate = ReadCertificate(cert, location, log);
 
+                    if(serverCertificate == null)
+                    {
+                        throw new System.Exception("ReadCertificate() was unable to retrieve the signing certificate.");
+                    }
+
                     // Get signing cert private key from a location. 
                     AsymmetricKeyParameter serverPrivateKey = ReadPrivateKey(key, location, log);
+
+                    if (serverPrivateKey == null)
+                    {
+                        throw new System.Exception("ReadPrivateKey() was unable to retrieve the private key.");
+                    }
 
                     byte[] csr = Convert.FromBase64String(request.Csr);
 
@@ -126,6 +142,8 @@ namespace XBoot.Server
                 }
                 else
                 {
+                    log.LogError($"{request.RegistrationId} is NOT authorized.");
+
                     return new UnauthorizedResult();
                 }
 
@@ -146,6 +164,7 @@ namespace XBoot.Server
         /// <returns>True if device is authorized</returns>
         private static bool CheckIfAuthorized(string registrationId)
         {
+
             bool isAuthorized = true;
 
             // TODO You should validate the RegistrationId with some external source e.g. a database
@@ -159,14 +178,17 @@ namespace XBoot.Server
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Completed Task</returns>
-        private static Task ReadAppSettings(ExecutionContext context)
+        private static Task ReadAppSettings(ExecutionContext context, ILogger log)
         {
+
+            log.LogInformation($"Reading app settings...");
+
             try
             {
                 var config = new ConfigurationBuilder()
                     .SetBasePath(context.FunctionAppDirectory)
-                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                     .AddEnvironmentVariables()
+                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                     .Build();
 
                 location = config.GetValue<Location>("Location");
@@ -191,18 +213,28 @@ namespace XBoot.Server
                     cert = config["CertificateFile"];
                 }
 
+                if (location == Location.KeyVault)
+                {
+                    keyVaultName = config["KeyVaultName"];
+                    cert = config["CertificateFile"];
+                    key = ""; // Private key is read from the certificate
+                }
+
             }
             catch
             {
                 throw new System.Exception("Missing app settings");
             }
 
+            log.LogInformation($"Finished reading app settings. Using {location}.");
+
             return Task.CompletedTask;
+
         }
 
         /// <summary>
         /// Extracts the signing private key (pem/pkcs8 format) from a location.
-        /// Supported locations: Blob storage, File, Local, KeyVault (not yet implemented).
+        /// Supported locations: Blob storage, File, Local, KeyVault.
         /// </summary>
         /// <param name="privateKey"></param>
         /// <param name="location"></param>
@@ -210,6 +242,9 @@ namespace XBoot.Server
         /// <returns>Signing cert private key</returns>
         private static AsymmetricKeyParameter ReadPrivateKey(string privateKey, Location location, ILogger log)
         {
+
+            log.LogInformation($"Reading private key from {location}...");
+
             AsymmetricCipherKeyPair keyPair = null;
 
             try
@@ -245,8 +280,18 @@ namespace XBoot.Server
 
                 if (location == Location.KeyVault)
                 {
-                    // TODO
-                    throw new NotImplementedException();
+                    // Get the managed secret which contains the public and private key (if exportable).
+                    string secretName = ParseSecretName(keyVaultCertificate.SecretId);
+
+                    SecretClient secretClient = new SecretClient(new Uri($"https://{keyVaultName}.vault.azure.net"), new DefaultAzureCredential());
+
+                    KeyVaultSecret certificateSecret = secretClient.GetSecret(secretName);  // Returns PKCS12
+
+                    byte[] certificateBytes = System.Convert.FromBase64String(certificateSecret.Value);
+
+                    var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateBytes, "", System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.Exportable | System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.MachineKeySet);
+
+                    keyPair = DotNetUtilities.GetKeyPair(x509.PrivateKey);
                 }
             }
             catch (Exception ex)
@@ -254,12 +299,29 @@ namespace XBoot.Server
                 log.LogError(ex.Message);
             }
 
+            log.LogInformation($"Finished reading private key from {location}.");
+
             return keyPair.Private;
         }
 
         /// <summary>
+        /// Parses the secret name.
+        /// </summary>
+        /// <param name="secretId"></param>
+        /// <returns></returns>
+        private static string ParseSecretName(Uri secretId)
+        {
+            if (secretId.Segments.Length < 3)
+            {
+                throw new InvalidOperationException($@"The secret ""{secretId}"" does not contain a valid name.");
+            }
+
+            return secretId.Segments[2].TrimEnd('/');
+        }
+
+        /// <summary>
         /// Reads the signing certificate from a location.
-        /// Supported locations: Blob storage, File, Local, KeyVault (not yet implemented).
+        /// Supported locations: Blob storage, File, Local, KeyVault.
         /// </summary>
         /// <param name="certificate"></param>
         /// <param name="location"></param>
@@ -267,6 +329,9 @@ namespace XBoot.Server
         /// <returns>x509 certificate without private key</returns>
         private static X509Certificate ReadCertificate(string certificate, Location location, ILogger log)
         {
+
+            log.LogInformation($"Reading certificate from {location}...");
+
             X509Certificate x509 = null;
 
             try
@@ -300,14 +365,17 @@ namespace XBoot.Server
 
                 if (location == Location.KeyVault)
                 {
-                    // TODO
-                    throw new NotImplementedException();
+                    var client = new CertificateClient(new Uri($"https://{keyVaultName}.vault.azure.net"), new DefaultAzureCredential());
+                    keyVaultCertificate = client.GetCertificate(certificate);
+                    x509 = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(keyVaultCertificate.Cer);
                 }
             }
             catch(Exception ex)
             {
                 log.LogError(ex.Message);
             }
+
+            log.LogInformation($"Finished reading certificate {x509.SubjectDN} from {location}.");
 
             return x509;
         }
