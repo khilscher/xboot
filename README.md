@@ -28,13 +28,16 @@ The following shows the output from the XBoot.SampleClient:
 
 ![Sequence Diagram](./XBoot.png)
 
-## Setup
+## General Setup
 
 1. Generate your root and intermediate certificate by following the **Generating Certificates for XBoot.Server** instructions below. The intermediate certificate will be the **signing** certificate.
-1. Update your local.setting.json following the  **App Settings** instructions below.
-1. Save your intermediate certificate and private key in the location you specified in the previous step.
-1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test. When deploying to Azure, ensure the settings you configured in the ```local.settings.json``` are in your Function App **Application Settings**.
-1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the **XBoot.SampleClient** ```Program.cs``` file.
+1. Decide where you will store the signing certificate and its private key and follow the instructions below for that option. Options are:
+    - Key Vault
+    - Files
+    - Blob
+    - App Settings
+1. Deploy the **XBoot.Server** Azure Function, either to Azure or you can run it locally to test. When deploying to Azure, ensure the settings you configured in the ```local.settings.json``` are in your **Function App > Configuration > Application Settings**.
+1. Once the **XBoot.Server** Azure Function is deployed, copy the Azure Function **REST endpoint URL** and paste it into the ```xbootUri``` in the **XBoot.SampleClient** ```Program.cs``` file. You can obtain this under **Function App > Functions > Certificate > Get Function URL**.
 1. Create an **Azure IoT Hub**.
 1. Create an **Azure DPS** instance. Copy the **ID Scope** into ```idScope``` in the **XBoot.SampleClient** ```Program.cs``` file.
 1. Link the DPS instance to your IoT Hub.
@@ -46,13 +49,38 @@ The following shows the output from the XBoot.SampleClient:
 1. Edit the CSR details on lines 30-36 of the **XBoot.SampleClient** ```Program.cs``` file.
 1. Build and run the **XBoot.SampleClient**.
 
-## App Settings
+## Key Vault Setup
+When the signing certificate and private key are going to be stored in Key Vault...
+- Create an Azure Key Vault. Record the Key Vault name.
+- Import your signing certificate, which also contains your private key, to the **Certificates** section of Azure Key Vault. Record the certificate name. 
+    - No need to import the private key as a Key. XBoot.Server will extract the private key from the certificate so you do not need to specify the location of the private key.
+- Create a Managed Identity for your Azure Function. Go to your **Function App > Identity > System assigned > Status = On**. Copy your **Object ID**.
+- In **Key Vault > Access policies > Add access policy** choose **Key, Secret & Certificate Management** as the template and choose your **Object ID** under **Select principal**. Leave authorized application as none selected.
 
-Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. When running the **XBoot.Server** Azure Function in Azure, ensure the settings below are in your **Application Settings**.
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. When running the **XBoot.Server** Azure Function in Azure, ensure the settings below are in your Azure Function App **Application Settings**.
 
-**Note:** Azure Key Vault support is not yet implemented.
+```
+{
+  ...,
+  "Location": 0,
+  "KeyVaultName": "MyKeyVault",
+  "CertificateFile": "Intermediate"
+}
+```
 
-### When the signing certificate and private key are stored in files
+Where:
+
+- ```KeyVaultName``` is the name of your Azure Key Vault.
+- ```CertificateFile``` is the name of the signing certificate you **imported** into Azure Key Vault under **Certificates**
+
+## Files Setup
+When the signing certificate and private key are stored in files...
+
+- Save the files to a location and record that location.
+
+**Note: This should only be used in development/testing.**
+
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer.
 
 ```
 {
@@ -63,7 +91,15 @@ Add the following to your ```local.settings.json``` when running the **XBoot.Ser
 }
 ```
 
-### When the signing certificate and private key are stored in Azure Blob Storage
+## Azure Blob Setup
+When the signing certificate and private key are stored in Azure Blob Storage...
+
+- Create an Azure Blob Storage account.
+- **Azure Blob Storage account > Access keys** and copy one of the two **Connections strings**.
+- Create a Container. Record the container name.
+- Upload the certificate file and the private key file to the Container.
+
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer. When running the **XBoot.Server** Azure Function in Azure, ensure the settings below are in your Azure Function App **Application Settings**.
 
 ```
 {
@@ -76,7 +112,12 @@ Add the following to your ```local.settings.json``` when running the **XBoot.Ser
 }
 ```
 
-### When the signing certificate and private key are stored directly in the App Settings
+## App Settings Setup
+When the signing certificate and private key are stored directly in the App Settings...
+
+**Note: This should only be used in development/testing.**
+
+Add the following to your ```local.settings.json``` when running the **XBoot.Server** Azure Function locally on your development computer.
 
 ```
 {
@@ -132,7 +173,6 @@ Package in PKCS 12
 ```
 openssl pkcs12 -export -out ia.p12 -inkey ia.key -in ia.cer -chain -CAfile ca.cer
 ```
-
 
 ## Backlog
 
